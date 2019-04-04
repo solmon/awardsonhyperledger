@@ -1,0 +1,87 @@
+# This is Tek Systems HealthWise Network for Health Care Claims Problem Solve
+
+version: '2'
+
+volumes:
+  orderer.healthwise.com:
+  peer0.zigmainsurance.com:
+  peer1.zigmainsurance.com:
+  peer0.primecarehospital.com:
+  peer1.primecarehospital.com:
+
+networks:
+  hwn:
+services:
+  ca0:
+    image: hyperledger/fabric-ca:$IMAGE_TAG
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-zigmainsurance
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.zigmainsurance.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/020a5c8489298d498c3554a5197ba435e75b5c63da3c0f19d081caef6806b76f_sk
+    ports:
+      - "7054:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.zigmainsurance.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/020a5c8489298d498c3554a5197ba435e75b5c63da3c0f19d081caef6806b76f_sk -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/zigmainsurance.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca_zigmainsurance
+    networks:
+      - hwn
+
+  ca1:
+    image: hyperledger/fabric-ca:$IMAGE_TAG
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-primecarehospital
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.primecarehospital.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/6588fd586ac5a882a8fa2a6fd4b847d64b49a9967c9c5063c298ff6dbac91376_sk
+    ports:
+      - "8054:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.primecarehospital.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/6588fd586ac5a882a8fa2a6fd4b847d64b49a9967c9c5063c298ff6dbac91376_sk -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/primecarehospital.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca_primecarehospital
+    networks:
+      - hwn
+
+  orderer.healthwise.com:
+    extends:
+      file:   base/docker-compose-base.yaml
+      service: orderer.healthwise.com
+    container_name: orderer.healthwise.com
+    networks:
+      - hwn
+
+  peer0.zigmainsurance.com:
+    container_name: peer0.zigmainsurance.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer0.zigmainsurance.com
+    networks:
+      - hwn
+
+  peer1.zigmainsurance.com:
+    container_name: peer1.zigmainsurance.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer1.zigmainsurance.com
+    networks:
+      - hwn
+
+  peer0.primecarehospital.com:
+    container_name: peer0.primecarehospital.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer0.primecarehospital.com
+    networks:
+      - hwn
+
+  peer1.primecarehospital.com:
+    container_name: peer1.primecarehospital.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer1.primecarehospital.com
+    networks:
+      - hwn

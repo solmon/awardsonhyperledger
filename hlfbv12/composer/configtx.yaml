@@ -1,0 +1,113 @@
+Capabilities:
+    Global: &ChannelCapabilities
+        V1_1: true
+    Orderer: &OrdererCapabilities
+        V1_1: true
+    Application: &ApplicationCapabilities
+        V1_2: true
+
+Organizations:
+    - &OrdererOrg
+        Name: OrdererOrg
+        ID: OrdererMSP
+        MSPDir: crypto-config/ordererOrganizations/employeeawards.com/msp
+        AdminPrincipal: Role.ADMIN
+    - &employeeawards
+        Name: employeeawards
+        ID: employeeawardsMSP
+        MSPDir: crypto-config/peerOrganizations/employeeawards.com/msp
+        AdminPrincipal: Role.ADMIN
+        AnchorPeers:
+            - Host: peer0.employeeawards.com
+              Port: 7051
+    - &teksystems
+        Name: teksystems
+        ID: teksystemsMSP
+        MSPDir: crypto-config/peerOrganizations/teksystems.com/msp
+        AdminPrincipal: Role.ADMIN
+        AnchorPeers:
+            - Host: peer0.teksystems.com
+              Port: 7051
+    - &cubesystems
+        Name: cubesystems
+        ID: cubesystemsMSP
+        MSPDir: crypto-config/peerOrganizations/cubesystems.com/msp
+        AdminPrincipal: Role.ADMIN
+        AnchorPeers:
+            - Host: peer0.cubesystems.com
+              Port: 7051
+
+Orderer: &OrdererDefaults
+    OrdererType: solo
+    Addresses:
+        - orderer.employeeawards.com:7050
+    BatchTimeout: 2s
+    BatchSize:
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 98 MB
+        PreferredMaxBytes: 512 KB
+    MaxChannels: 0
+    Kafka:
+        Brokers:
+            - 127.0.0.1:9092
+    Organizations:
+        - <<: *employeeawards
+        - <<: *teksystems
+        - <<: *cubesystems
+    Capabilities:
+        <<: *OrdererCapabilities
+
+Application: &ApplicationDefaults
+    Organizations:
+        - <<: *employeeawards
+        - <<: *teksystems
+        - <<: *cubesystems
+    Capabilities:
+        <<: *ApplicationCapabilities
+
+Profiles:
+    EmployeeAwardsOrdererGenesis:
+        Capabilities:
+            <<: *ChannelCapabilities
+        Orderer:
+            <<: *OrdererDefaults
+            OrdererType: solo
+            Organizations:
+                - <<: *OrdererOrg
+                - <<: *employeeawards
+                - <<: *teksystems
+                - <<: *cubesystems
+                  AdminPrincipal: ROLE.MEMBER
+            Capabilities:
+                <<: *OrdererCapabilities
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - <<: *OrdererOrg
+                - <<: *employeeawards
+                - <<: *teksystems
+                - <<: *cubesystems
+                  AdminPrincipal: ROLE.MEMBER
+            Capabilities:
+                <<: *ApplicationCapabilities
+        Consortiums:
+            EmployeeAwardsConsortium:
+                Organizations:
+                    - <<: *OrdererOrg
+                    - <<: *employeeawards
+                    - <<: *teksystems
+                    - <<: *cubesystems
+                      AdminPrincipal: ROLE.MEMBER
+    EmployeeAwardsChannel:
+        Capabilities:
+            <<: *ChannelCapabilities
+        Consortium: EmployeeAwardsConsortium
+        Application:
+            <<: *ApplicationDefaults 
+            Organizations:
+                - <<: *employeeawards
+                - <<: *teksystems
+                - <<: *cubesystems      
+            Capabilities:
+                <<: *ApplicationCapabilities
+

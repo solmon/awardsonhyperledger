@@ -1,0 +1,122 @@
+# This is Tek Systems HealthWise Network for Health Care Claims Problem Solve
+
+version: '2'
+
+volumes:
+  orderer.employeeawards.com:
+  peer0.employeeawards.com:
+  peer1.employeeawards.com:
+  peer0.teksystems.com:
+  peer1.teksystems.com:
+  peer0.cubesystems.com:
+  peer1.cubesystems.com:
+
+networks:
+  ean:
+services:
+  ca0:
+    image: hyperledger/fabric-ca:$IMAGE_TAG
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-employeeawards
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.employeeawards.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY
+    ports:
+      - "7054:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.employeeawards.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA1_PRIVATE_KEY -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/employeeawards.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca_employeeawards
+    networks:
+      - ean
+
+  ca1:
+    image: hyperledger/fabric-ca:$IMAGE_TAG
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-teksystems
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.teksystems.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY
+    ports:
+      - "8054:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.teksystems.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA2_PRIVATE_KEY -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/teksystems.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca_teksystems
+    networks:
+      - ean
+
+  ca3:
+    image: hyperledger/fabric-ca:$IMAGE_TAG
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-cubesystems
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.cubesystems.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/CA3_PRIVATE_KEY
+    ports:
+      - "8054:7054"
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.cubesystems.com-cert.pem --ca.keyfile /etc/hyperledger/fabric-ca-server-config/CA3_PRIVATE_KEY -b admin:adminpw -d'
+    volumes:
+      - ./crypto-config/peerOrganizations/cubesystems.com/ca/:/etc/hyperledger/fabric-ca-server-config
+    container_name: ca_cubesystems
+    networks:
+      - ean
+
+  orderer.employeeawards.com:
+    extends:
+      file:   base/docker-compose-base.yaml
+      service: orderer.employeeawards.com
+    container_name: orderer.employeeawards.com
+    networks:
+      - ean
+
+  peer0.employeeawards.com:
+    container_name: peer0.employeeawards.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer0.employeeawards.com
+    networks:
+      - ean
+
+  peer1.employeeawards.com:
+    container_name: peer1.employeeawards.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer1.employeeawards.com
+    networks:
+      - ean
+
+  peer0.teksystems.com:
+    container_name: peer0.teksystems.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer0.teksystems.com
+    networks:
+      - ean
+
+  peer1.teksystems.com:
+    container_name: peer1.teksystems.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer1.teksystems.com
+    networks:
+      - ean
+  
+  peer0.cubesystems.com:
+    container_name: peer0.cubesystems.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer0.cubesystems.com
+    networks:
+      - ean
+
+  peer1.cubesystems.com:
+    container_name: peer1.cubesystems.com
+    extends:
+      file:  base/docker-compose-base.yaml
+      service: peer1.cubesystems.com
+    networks:
+      - ean

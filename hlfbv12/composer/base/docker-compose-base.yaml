@@ -1,0 +1,134 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '2'
+
+services:
+  zookeeper:
+        image: hyperledger/fabric-zookeeper
+        ports:
+            - 2181
+            - 2888
+            - 3888
+
+  kafka:
+        image: hyperledger/fabric-kafka
+        environment:
+            - KAFKA_LOG_RETENTION_MS=-1
+            - KAFKA_MESSAGE_MAX_BYTES=103809024
+            - KAFKA_REPLICA_FETCH_MAX_BYTES=103809024
+            - KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE=false
+            - KAFKA_DEFAULT_REPLICATION_FACTOR=${KAFKA_DEFAULT_REPLICATION_FACTOR}
+            - KAFKA_MIN_INSYNC_REPLICAS=2
+        ports:
+            - 9092
+            
+  couchdb:
+        image: hyperledger/fabric-couchdb
+  
+  orderer.healthwise.com:
+    container_name: orderer.healthwise.com
+    image: hyperledger/fabric-orderer:$IMAGE_TAG
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=debug
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      # enabled TLS
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+    - ../channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+    - ../crypto-config/ordererOrganizations/healthwise.com/orderers/orderer.healthwise.com/msp:/var/hyperledger/orderer/msp
+    - ../crypto-config/ordererOrganizations/healthwise.com/orderers/orderer.healthwise.com/tls/:/var/hyperledger/orderer/tls
+    - orderer.healthwise.com:/var/hyperledger/production/orderer
+    ports:
+      - 7050:7050
+
+  peer0.zigmainsurance.com:
+    container_name: peer0.zigmainsurance.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.zigmainsurance.com
+      - CORE_PEER_ADDRESS=peer0.zigmainsurance.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.zigmainsurance.com:7051
+      - CORE_PEER_LOCALMSPID=zigmainsuranceMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/zigmainsurance.com/peers/peer0.zigmainsurance.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/zigmainsurance.com/peers/peer0.zigmainsurance.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.zigmainsurance.com:/var/hyperledger/production
+    ports:
+      - 7051:7051
+      - 7053:7053
+
+  peer1.zigmainsurance.com:
+    container_name: peer1.zigmainsurance.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.zigmainsurance.com
+      - CORE_PEER_ADDRESS=peer1.zigmainsurance.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.zigmainsurance.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.zigmainsurance.com:7051
+      - CORE_PEER_LOCALMSPID=zigmainsuranceMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/zigmainsurance.com/peers/peer1.zigmainsurance.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/zigmainsurance.com/peers/peer1.zigmainsurance.com/tls:/etc/hyperledger/fabric/tls
+        - peer1.zigmainsurance.com:/var/hyperledger/production
+
+    ports:
+      - 8051:7051
+      - 8053:7053
+
+  peer0.primecarehospital.com:
+    container_name: peer0.primecarehospital.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer0.primecarehospital.com
+      - CORE_PEER_ADDRESS=peer0.primecarehospital.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.primecarehospital.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.primecarehospital.com:7051
+      - CORE_PEER_LOCALMSPID=primecarehospitalMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/primecarehospital.com/peers/peer0.primecarehospital.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/primecarehospital.com/peers/peer0.primecarehospital.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.primecarehospital.com:/var/hyperledger/production
+    ports:
+      - 9051:7051
+      - 9053:7053
+
+  peer1.primecarehospital.com:
+    container_name: peer1.primecarehospital.com
+    extends:
+      file: peer-base.yaml
+      service: peer-base
+    environment:
+      - CORE_PEER_ID=peer1.primecarehospital.com
+      - CORE_PEER_ADDRESS=peer1.primecarehospital.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.primecarehospital.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.primecarehospital.com:7051
+      - CORE_PEER_LOCALMSPID=primecarehospitalMSP
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../crypto-config/peerOrganizations/primecarehospital.com/peers/peer1.primecarehospital.com/msp:/etc/hyperledger/fabric/msp
+        - ../crypto-config/peerOrganizations/primecarehospital.com/peers/peer1.primecarehospital.com/tls:/etc/hyperledger/fabric/tls
+        - peer1.primecarehospital.com:/var/hyperledger/production
+    ports:
+      - 10051:7051
+      - 10053:7053
